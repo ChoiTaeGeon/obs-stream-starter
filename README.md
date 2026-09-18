@@ -33,10 +33,10 @@
 # ==============================================================================
 # 1. 방송(Stream) 자동 재시작 설정
 ENABLE_STREAM_RESTART=true      # 방송 자동 재시작 사용 (true / false)
-STREAM_INTERVAL_HOURS=5         # 방송 재시작 주기 (기본 5시간, e.g. 5 = 5시간, 0.5 = 30분)
+STREAM_INTERVAL_HOURS=10        # 방송 재시작 주기 (기본 10시간, e.g. 10 = 10시간, 0.5 = 30분)
 
-# 2. 동영상 녹화(Recording) 자동 재시작 설정 [새 기능!]
-ENABLE_RECORD_RESTART=true      # 녹화 자동 재시작 사용 (true / false)
+# 2. 동영상 녹화(Recording) 자동 재시작 설정
+ENABLE_RECORD_RESTART=false     # 녹화 자동 재시작 비활성화 (필요 시 true로 변경)
 RECORD_INTERVAL_HOURS=2         # 녹화 재시작 주기 (기본 2시간 단위, e.g. 2 = 2시간, 1 = 1시간)
 
 # 3. 쿨다운 대기 시간 (초 단위)
