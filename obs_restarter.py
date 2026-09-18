@@ -6,6 +6,8 @@ OBS Studio 방송 자동 재시작 모듈 (macOS / OBS v28+ WebSocket v5 호환)
 import sys
 import time
 import argparse
+import platform
+import subprocess
 
 try:
     import obsws_python as obs
@@ -61,8 +63,72 @@ def is_streaming(client) -> bool:
         return False
 
 
+def auto_click_youtube_broadcast() -> bool:
+    """macOS에서 OBS YouTube '방송 설정 관리' 팝업 및 '방송 생성 및 시작' 버튼 자동 클릭 (VOD 분할용)"""
+    if platform.system() != "Darwin":
+        return False
+
+    script = '''
+    tell application "System Events"
+        if exists (process "OBS") then
+            tell process "OBS"
+                set frontmost to true
+                delay 0.5
+                
+                -- 1단계: "방송을 진행하기 전에 방송 설정이 필요합니다" 팝업에서 "방송 설정 관리" 클릭
+                set foundManage to false
+                repeat with w in (get windows)
+                    try
+                        if exists (button "방송 설정 관리" of w) then
+                            click button "방송 설정 관리" of w
+                            set foundManage to true
+                            exit repeat
+                        else if exists (button "Manage Broadcast" of w) then
+                            click button "Manage Broadcast" of w
+                            set foundManage to true
+                            exit repeat
+                        end if
+                    end try
+                end repeat
+                
+                -- 2단계: "방송 설정 관리" 대화상자에서 "방송 생성 및 시작" 클릭
+                repeat 15 times
+                    delay 0.6
+                    repeat with w in (get windows)
+                        try
+                            if exists (button "방송 생성 및 시작" of w) then
+                                click button "방송 생성 및 시작" of w
+                                return "CLICKED_CREATE"
+                            else if exists (button "Create broadcast and start streaming" of w) then
+                                click button "Create broadcast and start streaming" of w
+                                return "CLICKED_CREATE"
+                            end if
+                        end try
+                    end repeat
+                end repeat
+                
+                if foundManage then
+                    return "TIMEOUT_CREATE"
+                else
+                    return "NO_POPUP"
+                end if
+            end tell
+        end if
+    end tell
+    return "NO_OBS"
+    '''
+    try:
+        res = subprocess.run(["osascript", "-e", script], capture_output=True, text=True, timeout=15)
+        out = res.stdout.strip()
+        if "CLICKED_CREATE" in out:
+            return True
+    except Exception as e:
+        pass
+    return False
+
+
 def restart_stream(host: str, port: int, password: str, cooldown: int = 10) -> bool:
-    """방송 중단 후 N초 대기 후 재시작"""
+    """방송 중단 후 N초 대기 후 재시작 (YouTube 새 방송 자동 분할 생성 지원)"""
     print(f"\n[작업 시작] OBS WebSocket ({host}:{port}) 연결 중...")
     client = get_client(host, port, password)
     if not client:
@@ -72,6 +138,7 @@ def restart_stream(host: str, port: int, password: str, cooldown: int = 10) -> b
         active = is_streaming(client)
         if active:
             print("[1/3] 현재 방송이 송출 중입니다. 방송 중단(StopStream) 요청을 보냅니다...")
+            print("      (이전 10시간 방송이 종료되며 유튜브 VOD로 안전하게 저장 처리됩니다.)")
             client.stop_stream()
             
             # 송출이 완전히 멈출 때까지 잠시 대기
@@ -85,18 +152,33 @@ def restart_stream(host: str, port: int, password: str, cooldown: int = 10) -> b
         else:
             print("[1/3] 현재 방송이 송출 중이 아닙니다. 바로 시작 단계로 넘어갑니다.")
 
-        print(f"[2/3] 스트림 버퍼 및 네트워크 정리를 위해 {cooldown}초간 대기합니다...")
+        print(f"[2/3] 유튜브 스트림 분할 및 네트워크 정리를 위해 {cooldown}초간 대기합니다...")
         for remaining in range(cooldown, 0, -1):
-            print(f"      재시작까지 {remaining}초...", end="\r", flush=True)
+            print(f"      새 방송 시작까지 {remaining}초...", end="\r", flush=True)
             time.sleep(1)
         print("      대기 완료!                                      ")
 
         print("[3/3] 방송 재시작(StartStream) 요청을 보냅니다...")
-        client.start_stream()
-        time.sleep(2)
+        try:
+            client.start_stream()
+        except Exception:
+            pass  # 유튜브 브로드캐스트 미설정 시 WebSocket 레벨 응답 예외 허용
+
+        time.sleep(1.5)
+
+        # 바로 방송이 켜지지 않은 경우: YouTube "방송 설정 관리" 팝업 자동 감지 및 새 방송 생성 클릭
+        if not is_streaming(client):
+            print("      [확인] '방송 설정 관리' 팝업 감지 중... (새 유튜브 방송 자동 생성 시도)")
+            clicked = auto_click_youtube_broadcast()
+            if clicked:
+                print("      [자동 클릭 완료] '방송 설정 관리' -> '새 방송 생성 및 시작' 버튼을 자동으로 클릭했습니다!")
+                for _ in range(15):
+                    time.sleep(1)
+                    if is_streaming(client):
+                        break
 
         if is_streaming(client):
-            print(">>> [성공] 방송이 성공적으로 다시 시작되었습니다! <<<\n")
+            print(">>> [성공] 새로운 유튜브 방송이 성공적으로 시작되었습니다! (VOD 분할 보존) <<<\n")
             return True
         else:
             print(">>> [경고] 재시작 요청을 보냈으나 방송 활성화 상태가 확인되지 않았습니다. <<<\n")
