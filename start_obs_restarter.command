@@ -20,7 +20,7 @@ COOLDOWN_SECONDS=10
 
 # 4. OBS WebSocket 연결 설정 (MODE="stream" 일 때만 사용)
 #    OBS 메뉴 -> 도구(Tools) -> WebSocket 서버 설정(WebSocket Server Settings)에서 확인
-OBS_WS_HOST="localhost"
+OBS_WS_HOST="127.0.0.1"
 OBS_WS_PORT=4455
 OBS_WS_PASSWORD="" # WebSocket 비밀번호가 설정되어 있다면 따옴표 안에 입력하세요. 없으면 빈칸 유지.
 # ==============================================================================
@@ -77,21 +77,16 @@ if [ "$MODE" = "stream" ]; then
     # obsws-python 설치 확인
     if ! "$PY_BIN" -c "import obsws_python" 2>/dev/null; then
         echo "[초기 설정] OBS WebSocket 제어 패키지(obsws-python)를 설치합니다..."
-        "$PIP_BIN" install --quiet obsws-python
+        "$PIP_BIN" install --quiet --disable-pip-version-check obsws-python
     fi
 
-    echo "[연결 확인] OBS WebSocket 연결 테스트 중..."
+    echo "[연결 확인] OBS WebSocket 연결 테스트 중 (${OBS_WS_HOST}:${OBS_WS_PORT})..."
     "$PY_BIN" obs_restarter.py --host "$OBS_WS_HOST" --port "$OBS_WS_PORT" --password "$OBS_WS_PASSWORD" --action status
     if [ $? -ne 0 ]; then
-        echo ""
         echo "------------------------------------------------------------"
-        echo "[주의] OBS WebSocket 연결에 실패했습니다."
-        echo "1. OBS Studio가 켜져 있는지 확인하세요."
-        echo "2. OBS 상단 메뉴 '도구' -> 'WebSocket 서버 설정'에서"
-        echo "   'WebSocket 서버 활성화'가 체크되어 있는지 확인하세요."
-        echo "3. 포트(기본 4455)와 비밀번호가 스크립트 설정과 일치하는지 확인하세요."
+        echo "[안내] 지금 OBS를 실행하고 WebSocket을 켜시면 정상 연동됩니다."
+        echo "루프를 계속 시작합니다 (5초 후 카운트다운 시작)..."
         echo "------------------------------------------------------------"
-        echo "그래도 루프를 계속 실행하시겠습니까? (5초 후 자동으로 계속 진행됩니다)"
         sleep 5
     fi
 fi

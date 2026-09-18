@@ -16,19 +16,39 @@ except ImportError:
 
 
 def get_client(host: str, port: int, password: str):
-    """OBS WebSocket 클라이언트 연결"""
-    try:
-        # obsws-python ReqClient 연결
-        kwargs = {"host": host, "port": port}
-        if password:
-            kwargs["password"] = password
-        client = obs.ReqClient(**kwargs)
-        return client
-    except Exception as e:
-        print(f"[연결 실패] OBS WebSocket 서버에 연결할 수 없습니다 ({host}:{port}).")
-        print(f"  원인: {e}")
-        print("  팁: OBS가 실행 중인지, '도구 > WebSocket 서버 설정'에서 서버가 활성화되어 있는지 확인하세요.")
-        return None
+    """OBS WebSocket 클라이언트 연결 (127.0.0.1 / localhost 자동 폴백 지원)"""
+    candidate_hosts = [host]
+    if host in ("localhost", "127.0.0.1"):
+        alt_host = "127.0.0.1" if host == "localhost" else "localhost"
+        if alt_host not in candidate_hosts:
+            candidate_hosts.append(alt_host)
+
+    last_error = None
+    for h in candidate_hosts:
+        try:
+            kwargs = {"host": h, "port": port}
+            if password:
+                kwargs["password"] = password
+            client = obs.ReqClient(**kwargs)
+            return client
+        except Exception as e:
+            last_error = e
+
+    err_msg = str(last_error)
+    if "Connection refused" in err_msg or "61" in err_msg:
+        print(f"\n[연결 실패] OBS WebSocket 서버에 연결할 수 없습니다 ({host}:{port}).")
+        print("  -> 원인: OBS가 실행 중이지 않거나, WebSocket 서버가 꺼져 있습니다.")
+    else:
+        print(f"\n[연결 실패] OBS WebSocket 서버에 연결할 수 없습니다 ({host}:{port}).")
+        print(f"  -> 원인: {err_msg}")
+    print("\n  [해결 방법]")
+    print("  1. OBS Studio 프로그램이 켜져 있는지 확인하세요.")
+    print("  2. OBS 상단 메뉴 '도구' -> 'WebSocket 서버 설정'을 클릭하세요.")
+    print("  3. 'WebSocket 서버 활성화' 체크박스를 켜주세요 (포트: 4455).")
+    if password:
+        print("  4. 스크립트에 설정한 비밀번호가 OBS WebSocket 비밀번호와 일치하는지 확인하세요.")
+    print("")
+    return None
 
 
 def is_streaming(client) -> bool:
@@ -104,7 +124,7 @@ def check_connection(host: str, port: int, password: str) -> bool:
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="OBS Stream Controller")
-    parser.add_argument("--host", default="localhost", help="OBS WebSocket 호스트 (기본: localhost)")
+    parser.add_argument("--host", default="127.0.0.1", help="OBS WebSocket 호스트 (기본: 127.0.0.1)")
     parser.add_argument("--port", type=int, default=4455, help="OBS WebSocket 포트 (기본: 4455)")
     parser.add_argument("--password", default="", help="OBS WebSocket 비밀번호")
     parser.add_argument("--cooldown", type=int, default=10, help="중단 후 재시작 대기 시간(초)")
