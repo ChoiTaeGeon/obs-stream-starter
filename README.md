@@ -26,29 +26,39 @@
 
 ## ⚙️ 시간 및 동작 설정 변경 방법 (배치파일 수정)
 
-`start_obs_restarter.command` 파일을 텍스트 편집기(메모장, TextEdit, VS Code 등)로 열면 최상단에 직관적인 설정 구역이 있습니다:
+`start_obs_restarter.command` 파일을 텍스트 편집기(메모장, TextEdit, VS Code 등)로 열면 최상단에서 손쉽게 설정을 변경할 수 있습니다:
 
 ```bash
 # ==============================================================================
 # [★ 사용자 설정 영역 - 원하는 값으로 수정하세요]
 # ==============================================================================
-# 1. 재시작 주기 (시간 단위, 소수점 가능)
-#    예: 10 = 10시간마다 / 0.5 = 30분마다 / 0.016 = 약 1분마다(테스트용)
-RESTART_INTERVAL_HOURS=10
+# 1. 방송(Stream) 자동 재시작 설정
+ENABLE_STREAM_RESTART=true      # 방송 자동 재시작 사용 (true / false)
+STREAM_INTERVAL_HOURS=10        # 방송 재시작 주기 (기본 10시간, e.g. 10 = 10시간, 0.5 = 30분)
 
-# 2. 재시작 방식 선택:
-#    - "stream" : OBS 프로그램은 켜두고 방송 송출만 중단 후 재시작 (권장)
-#    - "app"    : OBS 프로그램 자체를 종료 후 재실행 (메모리 누수 방지용)
+# 2. 동영상 녹화(Recording) 자동 재시작 설정 [새 기능!]
+ENABLE_RECORD_RESTART=true      # 녹화 자동 재시작 사용 (true / false)
+RECORD_INTERVAL_HOURS=2         # 녹화 재시작 주기 (기본 2시간 단위, e.g. 2 = 2시간, 1 = 1시간)
+
+# 3. 쿨다운 대기 시간 (초 단위)
+STREAM_COOLDOWN_SECONDS=10      # 방송 중단 후 재시작 전 대기 시간 (초)
+RECORD_COOLDOWN_SECONDS=3       # 녹화 중지 후 새 녹화 시작 전 디스크 flush 대기 시간 (초)
+
+# 4. 재시작 방식 선택:
+#    - "stream" : OBS는 켜두고 방송/녹화만 안전하게 재시작 (권장 / 초경량 CPU 0% 최적화)
+#    - "app"    : OBS 프로그램 앱 자체를 완전히 껐다 켜기
 MODE="stream"
 
-# 3. 방송 중단 후 재시작 전 대기 시간 (초 단위)
-COOLDOWN_SECONDS=10
-
-# 4. OBS WebSocket 비밀번호 (OBS 설정에서 비밀번호를 지정한 경우에만 입력)
-OBS_WS_PASSWORD=""
+# 5. OBS WebSocket 연결 설정 (MODE="stream" 일 때 사용)
+OBS_WS_HOST="127.0.0.1"
+OBS_WS_PORT=4455
+OBS_WS_PASSWORD=""              # OBS에서 비밀번호를 설정한 경우에만 입력
 ```
 
-- **시간을 변경하고 싶을 때**: `RESTART_INTERVAL_HOURS=10`의 숫자를 원하는 시간(예: `8`, `12`, `6` 등)으로 변경하고 저장(`Cmd + S`)하면 바로 적용됩니다.
+- **방송 주기 변경**: `STREAM_INTERVAL_HOURS=10`을 원하는 시간(예: `8`, `12` 등)으로 수정
+- **녹화 주기 변경**: `RECORD_INTERVAL_HOURS=2`를 원하는 시간(예: `1`, `2`, `4` 등)으로 수정
+- **녹화 재시작 끄기/켜기**: `ENABLE_RECORD_RESTART=false` 또는 `true`
+
 
 ---
 
