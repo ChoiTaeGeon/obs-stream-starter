@@ -9,18 +9,17 @@
 1. **최초 1회 실행 권한 부여 (필수)**
    맥의 보안 정책상 다운로드받은 스크립트는 실행 권한이 필요합니다. 터미널을 열고 본 폴더 경로에서 아래 명령어를 한 번만 실행해주세요:
    ```bash
-   chmod +x start_obs_restarter.command
+   chmod +x *.command
    ```
 
 2. **OBS WebSocket 활성화 확인**
    - OBS Studio 실행 -> 상단 메뉴 **[도구(Tools)]** -> **[WebSocket 서버 설정(WebSocket Server Settings)]** 클릭
-   - **`WebSocket 서버 활성화(Enable WebSocket server)`** 체크
-   - 서버 포트: `4455` (기본값)
-   - *인증 활성화(비밀번호)가 체크되어 있다면 비밀번호를 복사하거나, 체크를 해제하시면 더 간편합니다.*
+   - **`WebSocket 서버 활성화(Enable WebSocket server)`** 체크 (포트: `4455`)
 
-3. **원클릭 실행**
-   - Finder(파인더)에서 **`start_obs_restarter.command`** 파일을 **더블클릭**하면 끝!
-   - 필요한 가상환경과 라이브러리를 자동으로 설치하고 즉시 10시간 타이머 카운트다운을 시작합니다.
+3. **용도에 맞는 원클릭 배치파일 더블클릭 실행**
+   - **`start_obs_restarter.command`**: 방송(10시간) 및 녹화(2시간) **통합 자동 재시작**
+   - **`start_record_restarter.command`**: 오직 **녹화만 2시간 단위로 자동 재시작** (방송 송출에는 영향 없음)
+
 
 ---
 
