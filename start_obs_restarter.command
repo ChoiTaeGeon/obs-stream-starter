@@ -9,7 +9,7 @@
 # ==============================================================================
 # 1. 방송(Stream) 자동 재시작 설정
 ENABLE_STREAM_RESTART=true      # 방송 자동 재시작 사용 (true / false)
-STREAM_INTERVAL_HOURS=10        # 방송 재시작 주기 (시간 단위, 소수점 가능 e.g. 10 = 10시간, 0.5 = 30분)
+STREAM_INTERVAL_HOURS=5         # 방송 재시작 주기 (시간 단위, 5 = 5시간마다 유튜브 새 방송 생성)
 
 # 2. 동영상 녹화(Recording) 자동 재시작 설정 [2시간 단위 설정]
 ENABLE_RECORD_RESTART=true      # 녹화 자동 재시작 사용 (true / false)

@@ -366,7 +366,7 @@ if __name__ == "__main__":
     parser.add_argument("--password", default="", help="OBS WebSocket 비밀번호")
     parser.add_argument("--cooldown", type=int, default=10, help="방송 중단 후 재시작 대기 시간(초)")
     parser.add_argument("--record-cooldown", type=int, default=3, help="녹화 중지 후 재시작 대기 시간(초)")
-    parser.add_argument("--stream-hours", type=float, default=10.0, help="방송 재시작 주기(시간)")
+    parser.add_argument("--stream-hours", type=float, default=5.0, help="방송 재시작 주기(시간)")
     parser.add_argument("--record-hours", type=float, default=2.0, help="녹화 재시작 주기(시간)")
     parser.add_argument("--enable-stream", action="store_true", default=True, help="방송 자동 재시작 활성화")
     parser.add_argument("--disable-stream", dest="enable_stream", action="store_false", help="방송 자동 재시작 비활성화")
